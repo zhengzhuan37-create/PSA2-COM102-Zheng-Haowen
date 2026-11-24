@@ -1,10 +1,9 @@
 MEMBER|M001|Alice Chen|alice.chen@example.com|2026-09-14
 MEMBER|M002|Ben Wu|ben.wu@example.com|2026-09-20
 MEMBER|M003|Maya Patel|maya.patel@example.com|2026-10-02
-MEMBER|M004|Tom Reed|tom.reed@example.com|2026-11-24
-RESOURCE|BOOK|R001|Clean Code|2008|M004|2026-12-08|Robert C. Martin|Programming
-RESOURCE|BOOK|R002|The Pragmatic Programmer|1999|M004|2026-12-08|Andrew Hunt|Programming
+RESOURCE|BOOK|R001|Clean Code|2008|-|-|Robert C. Martin|Programming
+RESOURCE|BOOK|R002|The Pragmatic Programmer|1999|-|-|Andrew Hunt|Programming
 RESOURCE|MAGAZINE|R003|National Geographic|2026|-|-|12|Science
-RESOURCE|DVD|R004|Inception|2010|-|-|Christopher Nolan|148
+RESOURCE|DVD|R004|Inception|2010|M002|2026-11-21|Christopher Nolan|148
 RESOURCE|EBOOK|R005|Effective Java|2018|-|-|3.4|PDF
-RESOURCE|BOOK|R007|Design Patterns|1994|M004|2026-12-08|Erich Gamma|Programming
+RESOURCE|BOOK|R006|A Brief History of Time|1988|-|-|Stephen Hawking|Science
