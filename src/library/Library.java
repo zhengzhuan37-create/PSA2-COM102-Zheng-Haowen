@@ -291,7 +291,8 @@ public class Library {
             if (line.startsWith("MEMBER|")) {
                 try {
                     members.add(parseMember(line));
-                } catch (IllegalArgumentException e) {
+                } catch (RuntimeException e) {
+                    // A bad number or date throws an unchecked exception; skip the record.
                     skipped++;
                 }
             }
@@ -303,7 +304,8 @@ public class Library {
             }
             try {
                 resources.add(parseResource(line.substring("RESOURCE|".length())));
-            } catch (IllegalArgumentException e) {
+            } catch (RuntimeException e) {
+                // Same as above: one unreadable record should not stop the program.
                 skipped++;
             }
         }
