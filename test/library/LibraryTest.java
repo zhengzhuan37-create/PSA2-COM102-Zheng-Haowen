@@ -148,6 +148,63 @@ class LibraryTest {
     }
 
     @Test
+    void borrowingCreatesAnOpenLoanRecord() {
+        library.borrowResource("R001", "M001", TODAY);
+
+        List<LoanRecord> loans = library.getLoans();
+        assertEquals(1, loans.size());
+        LoanRecord loan = loans.get(0);
+        assertEquals("R001", loan.getResourceId());
+        assertEquals("M001", loan.getMemberId());
+        assertEquals(TODAY, loan.getBorrowDate());
+        assertEquals(TODAY.plusDays(14), loan.getDueDate());
+        assertTrue(loan.isOpen());
+    }
+
+    @Test
+    void returningClosesTheRecordWithTheFine() {
+        library.borrowResource("R002", "M001", TODAY);
+
+        double fine = library.returnResource("R002", TODAY.plusDays(7));
+
+        LoanRecord loan = library.getLoans().get(0);
+        assertFalse(loan.isOpen());
+        assertEquals(TODAY.plusDays(7), loan.getReturnDate());
+        assertEquals(4.0, fine, 0.001);
+        assertEquals(4.0, loan.getFine(), 0.001);
+        assertTrue(library.getOpenLoans().isEmpty());
+    }
+
+    @Test
+    void loanHistoryCanBeFilteredByMember() {
+        library.borrowResource("R001", "M001", TODAY);
+        library.borrowResource("R002", "M002", TODAY);
+
+        assertEquals(1, library.getLoansForMember("M001").size());
+        assertEquals("R002", library.getLoansForMember("M002").get(0).getResourceId());
+        assertTrue(library.getLoansForMember("M999").isEmpty());
+    }
+
+    @Test
+    void loanHistoryIsSavedAndLoadedWithBothStates(@TempDir Path tempDir) throws IOException {
+        library.borrowResource("R001", "M001", TODAY);
+        library.borrowResource("R002", "M001", TODAY);
+        library.returnResource("R002", TODAY.plusDays(4));
+        Path file = tempDir.resolve("data.txt");
+
+        library.saveData(file);
+
+        Library loaded = new Library();
+        assertEquals(0, loaded.loadData(file));
+        assertEquals(2, loaded.getLoans().size());
+        LoanRecord open = loaded.getLoans().get(0);
+        assertTrue(open.isOpen());
+        LoanRecord closed = loaded.getLoans().get(1);
+        assertFalse(closed.isOpen());
+        assertEquals(1.0, closed.getFine(), 0.001);
+    }
+
+    @Test
     void aDamagedLineIsSkippedInsteadOfStoppingTheLoad(@TempDir Path tempDir) throws IOException {
         Path file = tempDir.resolve("data.txt");
         Files.write(file, List.of(
