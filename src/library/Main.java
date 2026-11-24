@@ -55,7 +55,8 @@ public class Main {
                     case 6 -> returnResource();
                     case 7 -> showResources();
                     case 8 -> showMembers();
-                    case 9 -> saveData();
+                    case 9 -> showLoanHistory();
+                    case 10 -> saveData();
                     case 0 -> {
                         saveData();
                         running = false;
@@ -80,7 +81,8 @@ public class Main {
         System.out.println("6. Return resource");
         System.out.println("7. Show all resources");
         System.out.println("8. Show all members");
-        System.out.println("9. Save data");
+        System.out.println("9. Show loan history");
+        System.out.println("10. Save data");
         System.out.println("0. Save and exit");
     }
 
@@ -219,6 +221,55 @@ public class Main {
         for (Member member : library.getMembers()) {
             System.out.println(member.describe());
         }
+    }
+
+    private void showLoanHistory() {
+        System.out.println("1. All loans");
+        System.out.println("2. Loans for one member");
+        System.out.println("3. Items still on loan");
+        int choice = readInt("Choose a view: ");
+        List<LoanRecord> records;
+        switch (choice) {
+            case 1 -> records = library.getLoans();
+            case 2 -> records = library.getLoansForMember(readLine("Member ID: "));
+            case 3 -> records = library.getOpenLoans();
+            default -> throw new IllegalArgumentException("Unknown history option.");
+        }
+        if (records.isEmpty()) {
+            System.out.println("No loan records found.");
+            return;
+        }
+        System.out.println(records.size() + " record(s):");
+        for (LoanRecord loan : records) {
+            System.out.println("  " + describeLoan(loan));
+        }
+    }
+
+    /**
+     * Builds the two lines shown for one loan record. The member and resource
+     * ids are turned into names when the records still exist, but the history
+     * is also readable after an item has been removed.
+     *
+     * @param loan the record to describe
+     * @return the text for the console
+     */
+    private String describeLoan(LoanRecord loan) {
+        Resource resource = library.findResourceById(loan.getResourceId());
+        String title = resource == null ? "removed item" : resource.getTitle();
+        Member member = library.findMemberById(loan.getMemberId());
+        String memberText = member == null ? loan.getMemberId()
+                : loan.getMemberId() + " " + member.getName();
+        String status;
+        if (loan.isOpen()) {
+            status = "still on loan";
+        } else {
+            String fineText = loan.getFine() > 0
+                    ? String.format("%.2f", loan.getFine()) + " GBP"
+                    : "no fine";
+            status = "returned " + loan.getReturnDate() + ", " + fineText;
+        }
+        return loan.getResourceId() + " \"" + title + "\" -> " + memberText
+                + "\n    borrowed " + loan.getBorrowDate() + ", due " + loan.getDueDate() + ", " + status;
     }
 
     private void saveData() {
