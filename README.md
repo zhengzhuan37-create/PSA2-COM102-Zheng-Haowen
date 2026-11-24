@@ -15,13 +15,14 @@ Author: Haowen Zheng · Student ID: STUDENT_ID · Ulster University, 2026/27.
 - Register members and list them.
 - Search by title (case-insensitive), by type, or show only available items.
 - Borrow and return items, with a due date on every loan.
+- Show the loan history: every loan, one member's loans, or items still out.
 - Fines per type: book 0.25 GBP/day, magazine 0.10, DVD 1.00, e-book none.
 - A member may hold at most three items at a time.
 - Validation with readable error messages: wrong IDs, duplicate IDs, bad years,
   borrowing an item that is already out, removing an item that is on loan.
 - Save on exit and load on start from `data/library-data.txt`. A damaged line in
   the file is skipped and counted instead of stopping the program.
-- Twelve JUnit 5 tests covering normal, boundary and error cases.
+- Sixteen JUnit 5 tests covering normal, boundary and error cases.
 
 ## Running the program
 
@@ -57,7 +58,11 @@ One record per line, fields separated by `|`.
 MEMBER|M001|Alice Chen|alice.chen@example.com|2026-09-14
 RESOURCE|BOOK|R001|Clean Code|2008|-|-|Robert C. Martin|Programming
 RESOURCE|DVD|R004|Inception|2010|M002|2026-11-21|Christopher Nolan|148
+LOAN|R004|M002|2026-11-18|2026-11-21|-|0.00
 ```
+
+A `LOAN` line holds the resource id, the member id, the borrow date, the due
+date, the return date (`-` while the item is out) and the fine.
 
 `-` means the item is available. Members are written first, then resources,
 because a resource record stores only the borrower's ID.
@@ -74,7 +79,7 @@ docs               design, testing and source PDFs, UML, screenshots, vodcast sc
 
 ## Documents
 
-- `docs/COM102_Design_HaowenZheng.pdf` — design and development document (547 words).
+- `docs/COM102_Design_HaowenZheng.pdf` — design and development document (576 words).
 - `docs/COM102_Testing_HaowenZheng.pdf` — testing and implementation document.
 - `docs/source-pdfs/` — PDF copies of every Java source file.
 - `docs/uml-class-diagram.svg` — class diagram used in the design document.
@@ -82,7 +87,7 @@ docs               design, testing and source PDFs, UML, screenshots, vodcast sc
 
 ## Known limitations
 
-- No loan history and no record of fines paid; the fine is printed and discarded.
+- Fines are recorded in the history, but there is no payment status or outstanding balance.
 - No reservations for items that are already on loan.
 - Saves overwrite the data file directly, without a temporary file and rename.
 - One record is one copy; two copies of a book need two IDs.
