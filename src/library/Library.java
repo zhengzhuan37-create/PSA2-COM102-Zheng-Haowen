@@ -32,6 +32,7 @@ public class Library {
 
     private final List<Resource> resources = new ArrayList<>();
     private final List<Member> members = new ArrayList<>();
+    private final List<LoanRecord> loans = new ArrayList<>();
 
     /**
      * Adds a resource to the library.
@@ -138,6 +139,7 @@ public class Library {
                     + " items on loan. One must be returned first.");
         }
         resource.borrow(member, today);
+        loans.add(new LoanRecord(resource.getId(), member.getId(), today, resource.getDueDate()));
     }
 
     /**
@@ -154,7 +156,70 @@ public class Library {
         if (resource.isAvailable()) {
             throw new IllegalStateException(resource.getId() + " is not on loan, so it cannot be returned.");
         }
-        return resource.returnItem(today);
+        LoanRecord openLoan = findOpenLoan(resource.getId());
+        double fine = resource.returnItem(today);
+        if (openLoan != null) {
+            openLoan.complete(today, fine);
+        }
+        return fine;
+    }
+
+    /**
+     * Returns every loan in the history, oldest first.
+     *
+     * @return the loan records
+     */
+    public List<LoanRecord> getLoans() {
+        return Collections.unmodifiableList(loans);
+    }
+
+    /**
+     * Returns the loan records of one member.
+     *
+     * @param memberId the member to look for
+     * @return that member's loans, oldest first
+     */
+    public List<LoanRecord> getLoansForMember(String memberId) {
+        List<LoanRecord> matches = new ArrayList<>();
+        if (memberId == null) {
+            return matches;
+        }
+        for (LoanRecord loan : loans) {
+            if (loan.getMemberId().equalsIgnoreCase(memberId)) {
+                matches.add(loan);
+            }
+        }
+        return matches;
+    }
+
+    /**
+     * Returns the loans that have not been returned yet.
+     *
+     * @return the open loan records
+     */
+    public List<LoanRecord> getOpenLoans() {
+        List<LoanRecord> open = new ArrayList<>();
+        for (LoanRecord loan : loans) {
+            if (loan.isOpen()) {
+                open.add(loan);
+            }
+        }
+        return open;
+    }
+
+    /**
+     * Finds the open record for a resource, if there is one.
+     *
+     * @param resourceId the resource to look for
+     * @return the open record, or null when the item has no open loan
+     */
+    private LoanRecord findOpenLoan(String resourceId) {
+        for (LoanRecord loan : loans) {
+            if (loan.isOpen() && loan.getResourceId().equalsIgnoreCase(resourceId)) {
+                return loan;
+            }
+        }
+        return null;
     }
 
     /**
@@ -247,9 +312,9 @@ public class Library {
     }
 
     /**
-     * Writes every member and resource to a text file, one record per line.
-     * Members are written first so they can be found again while the resources
-     * are being read back.
+     * Writes every member, resource and loan to a text file, one record per
+     * line. Members are written first so they can be found again while the
+     * resources are being read back, and the loans come last.
      *
      * @param path the file to write
      * @throws IOException if the file cannot be written
@@ -262,6 +327,9 @@ public class Library {
         for (Resource resource : resources) {
             lines.add("RESOURCE|" + resource.toDataLine());
         }
+        for (LoanRecord loan : loans) {
+            lines.add(loan.toDataLine());
+        }
         Path parent = path.getParent();
         if (parent != null) {
             Files.createDirectories(parent);
@@ -273,8 +341,9 @@ public class Library {
      * Reads the records from a text file and adds them to the library.
      *
      * <p>Members are read first because a resource line only stores the id of
-     * the member who has it. Lines that cannot be understood are skipped and
-     * counted, so one damaged line does not stop the program from starting.</p>
+     * the member who has it, and the loans are read last because they are their
+     * own records. Lines that cannot be understood are skipped and counted, so
+     * one damaged line does not stop the program from starting.</p>
      *
      * @param path the file to read
      * @return the number of lines that were skipped because they were not valid
@@ -306,6 +375,17 @@ public class Library {
                 resources.add(parseResource(line.substring("RESOURCE|".length())));
             } catch (RuntimeException e) {
                 // Same as above: one unreadable record should not stop the program.
+                skipped++;
+            }
+        }
+
+        for (String line : lines) {
+            if (line.isBlank() || !line.startsWith("LOAN|")) {
+                continue;
+            }
+            try {
+                loans.add(parseLoan(line));
+            } catch (RuntimeException e) {
                 skipped++;
             }
         }
@@ -373,6 +453,27 @@ public class Library {
             resource.restoreLoanState(borrower, LocalDate.parse(dueDate));
         }
         return resource;
+    }
+
+    /**
+     * Builds a loan record from one line of the save file, including the
+     * return date and fine when the item has already come back.
+     *
+     * @param line the LOAN line
+     * @return the loan record
+     * @throws IllegalArgumentException if the line is malformed
+     */
+    private LoanRecord parseLoan(String line) {
+        String[] parts = line.split("\\|", -1);
+        if (parts.length != 7) {
+            throw new IllegalArgumentException("Bad loan line: " + line);
+        }
+        LoanRecord loan = new LoanRecord(parts[1], parts[2], LocalDate.parse(parts[3]),
+                LocalDate.parse(parts[4]));
+        if (!parts[5].equals("-")) {
+            loan.restoreReturnState(LocalDate.parse(parts[5]), Double.parseDouble(parts[6]));
+        }
+        return loan;
     }
 
     /**
