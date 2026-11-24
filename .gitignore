@@ -14,3 +14,9 @@ build/
 # Local helper tools (not part of the submission)
 .tmp_pylibs/
 build-tools/
+
+# Generated documents (the PDFs are committed instead)
+docs/*.html
+
+# Submission package
+dist/
