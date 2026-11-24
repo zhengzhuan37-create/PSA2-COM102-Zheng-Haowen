@@ -1,0 +1,16 @@
+# IntelliJ build output
+out/
+build/
+*.class
+
+# IntelliJ personal settings
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+
+# macOS
+.DS_Store
+
+# Local helper tools (not part of the submission)
+.tmp_pylibs/
+build-tools/
