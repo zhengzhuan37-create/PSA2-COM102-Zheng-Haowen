@@ -7,7 +7,7 @@ A console application in Java for a small library. It manages books, magazines,
 DVDs and e-books, registers members, lends and returns items, and stores every
 record in a text file between runs.
 
-Author: Haowen Zheng · Student ID: STUDENT_ID · Ulster University, 2026/27.
+Author: Haowen Zheng · Student ID:202415030223 · Ulster University, 2026/27.
 
 ## Features
 
